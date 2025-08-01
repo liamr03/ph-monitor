@@ -5,6 +5,8 @@ import org.example.phmonitor.model.PhModel;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PreDestroy;
+
+import java.io.OutputStream;
 import java.util.Scanner;
 
 @Service
@@ -27,10 +29,16 @@ public class PhService {
         // Open port and check success
         if (serialPort.openPort()) {
             System.out.println("Serial port opened successfully.");
+            try {
+                Thread.sleep(2000);  // Wait 2 seconds for Arduino to reset and be ready
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         } else {
             System.err.println("Failed to open serial port.");
             return;  // or handle failure as needed
         }
+
 
         // Flush any leftover data
         serialPort.flushIOBuffers();
@@ -47,8 +55,9 @@ public class PhService {
 
     public PhModel getLatestReading() {
         try {
-            serialPort.getOutputStream().write('r');
-            serialPort.getOutputStream().flush();
+            OutputStream out = serialPort.getOutputStream();
+            out.write("r\n".getBytes());
+            out.flush();
 
             long start = System.currentTimeMillis();
             while (!scanner.hasNextLine() && System.currentTimeMillis() - start < 2000) {
