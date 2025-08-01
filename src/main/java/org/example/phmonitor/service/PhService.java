@@ -17,7 +17,31 @@ public class PhService {
     public PhService() {
         serialPort = SerialPort.getCommPort("/dev/ttyUSB0"); // Adjust as needed
         serialPort.setBaudRate(9600);
-        serialPort.openPort();
+        serialPort.setNumDataBits(8);
+        serialPort.setNumStopBits(SerialPort.ONE_STOP_BIT);
+        serialPort.setParity(SerialPort.NO_PARITY);
+
+        // Enable DTR to reset Arduino on open (like screen does)
+        serialPort.setDTR();
+
+        // Open port and check success
+        if (serialPort.openPort()) {
+            System.out.println("Serial port opened successfully.");
+        } else {
+            System.err.println("Failed to open serial port.");
+            return;  // or handle failure as needed
+        }
+
+        // Flush any leftover data
+        serialPort.flushIOBuffers();
+
+        // Wait for Arduino to reset and start sending data
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
         scanner = new Scanner(serialPort.getInputStream());
     }
 
