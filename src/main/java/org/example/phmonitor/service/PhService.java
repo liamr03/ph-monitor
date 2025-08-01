@@ -3,17 +3,17 @@ package org.example.phmonitor.service;
 import com.fazecast.jSerialComm.SerialPort;
 import org.example.phmonitor.model.PhModel;
 import org.springframework.stereotype.Service;
-
 import jakarta.annotation.PreDestroy;
-
 import java.io.OutputStream;
-import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class PhService {
 
     private SerialPort serialPort;
-    private Scanner scanner;
+    private BufferedReader reader;
     private PhModel latestReading = new PhModel(0.0);
 
     public PhService() {
@@ -21,6 +21,7 @@ public class PhService {
         serialPort.setBaudRate(9600);
         serialPort.setNumDataBits(8);
         serialPort.setNumStopBits(SerialPort.ONE_STOP_BIT);
+
         serialPort.setParity(SerialPort.NO_PARITY);
 
         // Enable DTR to reset Arduino on open (like screen does)
@@ -50,22 +51,28 @@ public class PhService {
             Thread.currentThread().interrupt();
         }
 
-        scanner = new Scanner(serialPort.getInputStream());
+        reader = new BufferedReader(new InputStreamReader(serialPort.getInputStream(), StandardCharsets.UTF_8));
     }
 
     public PhModel getLatestReading() {
         try {
             OutputStream out = serialPort.getOutputStream();
-            out.write("r\n".getBytes());
+            out.write("r".getBytes());
             out.flush();
+            Thread.sleep(100); // trying 100–200ms delay
 
+            String line = null;
             long start = System.currentTimeMillis();
-            while (!scanner.hasNextLine() && System.currentTimeMillis() - start < 2000) {
-                Thread.sleep(50);
+            while ((line == null || line.isEmpty()) && System.currentTimeMillis() - start < 2000) {
+                if (reader.ready()) {
+                    line = reader.readLine();
+                } else {
+                    Thread.sleep(50);
+                }
             }
 
-            if (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
+            if (line != null && !line.isEmpty()) {
+                System.out.println("Raw line received: " + line);
                 double value = Double.parseDouble(line.trim());
                 latestReading = new PhModel(value);
                 return latestReading;
