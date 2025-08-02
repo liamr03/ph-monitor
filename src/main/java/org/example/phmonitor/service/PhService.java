@@ -74,6 +74,13 @@ public class PhService {
             if (line != null && !line.isEmpty()) {
                 System.out.println("Raw line received: " + line);
 
+                // Print ASCII codes of each character in the line to debug spaces/newlines
+                System.out.print("Raw bytes: ");
+                for (char c : line.toCharArray()) {
+                    System.out.print((int)c + " ");
+                }
+                System.out.println();
+
                 // Replace comma with dot to ensure correct parsing
                 String normalized = line.trim().replace(',', '.');
 
