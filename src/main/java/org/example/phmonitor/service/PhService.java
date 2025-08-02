@@ -31,7 +31,7 @@ public class PhService {
         if (serialPort.openPort()) {
             System.out.println("Serial port opened successfully.");
             try {
-                Thread.sleep(2000);  // Wait 2 seconds for Arduino to reset and be ready
+                Thread.sleep(4000);  // Increase to 4 seconds
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -56,10 +56,18 @@ public class PhService {
 
     public PhModel getLatestReading() {
         try {
+            // Clear any old incoming data before sending new command
+            while (reader.ready()) {
+                String discarded = reader.readLine();
+                System.out.println("Discarded leftover line: " + discarded);
+            }
+
             OutputStream out = serialPort.getOutputStream();
             out.write("r".getBytes());
             out.flush();
-            Thread.sleep(100); // delay for Arduino to respond
+
+            // Wait a bit for Arduino to respond
+            Thread.sleep(200); // increased from 100 to 200 ms
 
             String line = null;
             long start = System.currentTimeMillis();
@@ -73,13 +81,6 @@ public class PhService {
 
             if (line != null && !line.isEmpty()) {
                 System.out.println("Raw line received: " + line);
-
-                // Print ASCII codes of each character in the line to debug spaces/newlines
-                System.out.print("Raw bytes: ");
-                for (char c : line.toCharArray()) {
-                    System.out.print((int)c + " ");
-                }
-                System.out.println();
 
                 // Replace comma with dot to ensure correct parsing
                 String normalized = line.trim().replace(',', '.');
