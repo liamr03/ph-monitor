@@ -72,9 +72,14 @@ public class PhService {
             }
 
             if (line != null && !line.isEmpty()) {
-                System.out.println("Raw line received: " + line);  // ← Add this
-                double value = Double.parseDouble(line.trim());
-                System.out.println("Parsed value = " + value);     // ← Add this
+                System.out.println("Raw line received: " + line);
+
+                // Replace comma with dot to ensure correct parsing
+                String normalized = line.trim().replace(',', '.');
+
+                double value = Double.parseDouble(normalized);
+                System.out.println("Parsed value = " + value);
+
                 latestReading = new PhModel(value);
                 return latestReading;
             } else {
