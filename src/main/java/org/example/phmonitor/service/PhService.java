@@ -59,7 +59,7 @@ public class PhService {
             OutputStream out = serialPort.getOutputStream();
             out.write("r".getBytes());
             out.flush();
-            Thread.sleep(100); // trying 100–200ms delay
+            Thread.sleep(100); // delay for Arduino to respond
 
             String line = null;
             long start = System.currentTimeMillis();
@@ -72,8 +72,9 @@ public class PhService {
             }
 
             if (line != null && !line.isEmpty()) {
-                System.out.println("Raw line received: " + line);
+                System.out.println("Raw line received: " + line);  // ← Add this
                 double value = Double.parseDouble(line.trim());
+                System.out.println("Parsed value = " + value);     // ← Add this
                 latestReading = new PhModel(value);
                 return latestReading;
             } else {
