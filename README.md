@@ -26,46 +26,21 @@ void setup() {
 void loop() {
   if (Serial.available() > 0) {
     char command = Serial.read();
-    
-    // Send 'r' via Serial Monitor to get a reading
     if (command == 'r') {
-      float ph = getAveragePH();  // Get filtered average
-      Serial.println(ph, 2);      // Print pH value with 2 decimal places
+      Serial.println(getPH(), 2);
     }
   }
 }
 
-/**
- * Collects samples, removes outliers, and returns the average pH.
- */
-float getAveragePH() {
-  const int sampleSize = 20;
-  float phValues[sampleSize];
+float getPH() {
+  const int sampleSize = 5;
+  float total = 0;
 
-  // 1. Collect pH readings
   for (int i = 0; i < sampleSize; i++) {
     int raw = analogRead(A0);
-    // Linear Calibration Formula: y = mx + b
-    phValues[i] = -0.025 * raw + 26.32; 
-    delay(50); 
+    total += -0.025 * raw + 26.32;
+    delay(50);
   }
 
-  // 2. Sort the values (Simple Bubble Sort)
-  for (int i = 0; i < sampleSize - 1; i++) {
-    for (int j = i + 1; j < sampleSize; j++) {
-      if (phValues[i] > phValues[j]) {
-        float temp = phValues[i];
-        phValues[i] = phValues[j];
-        phValues[j] = temp;
-      }
-    }
-  }
-
-  // 3. Average middle values (remove top 5 and bottom 5)
-  float total = 0;
-  for (int i = 5; i < sampleSize - 5; i++) {
-    total += phValues[i];
-  }
-
-  return total / (sampleSize - 10);
+  return total / sampleSize;
 }
