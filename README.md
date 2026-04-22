@@ -46,3 +46,6 @@ float getAveragePH() {
   return total / (sampleSize - 10);
 }
 
+<div align="center">
+  <img width="423" height="922" alt="image" src="https://github.com/user-attachments/assets/9916e792-ad97-42c8-8442-94d623a1e403" />
+</div>
