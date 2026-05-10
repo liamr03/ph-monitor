@@ -12,7 +12,7 @@ CORS(app)
 # The Adafruit library handles the single-shot trigger and byte-swapping automatically!
 i2c = busio.I2C(board.SCL, board.SDA)
 ads = ADS.ADS1115(i2c)
-ads.gain = 1  # This matches your ±4.096V range
+ads.gain = 1
 chan = AnalogIn(ads, 0)
 
 # --- Calculation Constants ---
@@ -37,7 +37,6 @@ def get_ph():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Helper route to make sure your PWA Service Worker is found
 @app.route('/service-worker.js')
 def sw():
     return send_from_directory('static', 'service-worker.js')
