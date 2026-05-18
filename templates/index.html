@@ -347,26 +347,45 @@
 
     async function fetchPh() {
         const dot = document.getElementById('status-dot');
+        const phValue = document.getElementById('ph-value');
+        const updatedTime = document.getElementById('updated-time');
+        const badge = document.getElementById('quality-badge');
+
         dot.style.background = '#ffd54f';
         dot.style.boxShadow  = '0 0 8px #ffd54f';
 
         try {
-            const res  = await fetch('/ph');
+            const res = await fetch('/ph');
             const data = await res.json();
-            const ph   = parseFloat(data.value);
 
-            document.getElementById('ph-value').textContent = ph.toFixed(2);
-            document.getElementById('updated-time').textContent =
-                'Updated ' + new Date().toLocaleTimeString();
-
-            applyPhStyle(ph);
-
-            dot.style.background = '#00e676';
-            dot.style.boxShadow  = '0 0 8px #00e676';
+            if (res.ok && data.value !== undefined) {
+                const ph = parseFloat(data.value);
+                phValue.textContent = ph.toFixed(2);
+                updatedTime.textContent = 'Updated ' + new Date().toLocaleTimeString();
+                applyPhStyle(ph);
+                dot.style.background = '#00e676';
+                dot.style.boxShadow  = '0 0 8px #00e676';
+            } else {
+                const msg = data.error || 'Unknown error';
+                phValue.textContent = '--';
+                phValue.style.fontSize = '1.4rem';
+                updatedTime.textContent = msg;
+                badge.textContent = 'Error';
+                badge.style.color = '#ef5350';
+                badge.style.borderColor = '#ef535044';
+                badge.style.background = '#ef535018';
+                dot.style.background = '#ef5350';
+                dot.style.boxShadow  = '0 0 8px #ef5350';
+            }
         } catch (err) {
             console.error(err);
-            document.getElementById('ph-value').textContent = 'Err';
-            document.getElementById('updated-time').textContent = 'Connection failed';
+            phValue.textContent = '--';
+            phValue.style.fontSize = '1.4rem';
+            updatedTime.textContent = 'Connection failed';
+            badge.textContent = 'Offline';
+            badge.style.color = '#ef5350';
+            badge.style.borderColor = '#ef535044';
+            badge.style.background = '#ef535018';
             dot.style.background = '#ef5350';
             dot.style.boxShadow  = '0 0 8px #ef5350';
         }

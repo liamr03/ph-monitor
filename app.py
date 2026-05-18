@@ -3,17 +3,22 @@ import busio
 import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
 from flask import Flask, jsonify, render_template, send_from_directory
-from flask_cors import CORS
 
 app = Flask(__name__, static_url_path='/static')
 CORS(app)
 
 # --- Hardware Setup ---
-# The Adafruit library handles the single-shot trigger and byte-swapping automatically!
-i2c = busio.I2C(board.SCL, board.SDA)
-ads = ADS.ADS1115(i2c)
-ads.gain = 1
-chan = AnalogIn(ads, 0)
+hardware_ok = False
+chan = None
+
+try:
+    i2c = busio.I2C(board.SCL, board.SDA)
+    ads = ADS.ADS1115(i2c)
+    ads.gain = 1
+    chan = AnalogIn(ads, 0)
+    hardware_ok = True
+except Exception as e:
+    print(f"HARDWARE ERROR: ADC init failed — {e}")
 
 # --- Calculation Constants ---
 VOLTAGE_AT_686 = 2.522
@@ -28,13 +33,15 @@ def index():
 
 @app.route('/ph', methods=['GET'])
 def get_ph():
+    if not hardware_ok or chan is None:
+        return jsonify({"error": "ADC not available — check I2C connection"}), 500
     try:
-        # Every time the UI calls this, the library triggers a fresh conversion
         voltage = chan.voltage
         ph_value = 6.86 + (voltage - VOLTAGE_AT_686) * SLOPE
         print(f"Reading: {round(ph_value, 2)} (Voltage: {round(voltage, 3)}V)")
         return jsonify({"value": round(ph_value, 2)})
     except Exception as e:
+        print(f"READ ERROR: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/service-worker.js')
